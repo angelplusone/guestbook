@@ -23,12 +23,10 @@ def initialize_state():
 initialize_state()
 conn = get_connection()
 
-st.title("회원가입과 로그인을 해보세요!")
-
 # 로그인 페이지
 if st.session_state.page == "login":
+    st.title("회원가입과 로그인을 해보세요!")
     st.header("로그인")
-
     if not st.session_state.logged_in:
         login_id = st.text_input("사용자 이름:")
         login_pw = st.text_input("비밀번호:", type="password")
@@ -41,7 +39,7 @@ if st.session_state.page == "login":
             user = cursor.fetchone()
 
             if user:
-                st.success("로그인되었습니다.")
+                st.success("로그인되었습니다. 로그인 버튼을 다시 눌러 위 창을 없앨 수 있습니다.")
                 st.session_state.logged_in = True
                 st.session_state.page = "home"
                 st.session_state.username = login_id
@@ -50,10 +48,11 @@ if st.session_state.page == "login":
 
 # 홈 페이지
 if st.session_state.page == "home":
+    st.title("방명록을 남겨보세요!")
     st.header(f"환영합니다, {st.session_state.username}! 로그인이 완료되었습니다.")
-    st.write("이 페이지에서 추가적인 컨텐츠를 보실 수 있습니다.")
+    st.write("입력 또는 like/dislike 버튼을 누른 뒤 클릭해주세요")
     # 로그아웃
-    if st.button("로그아웃"):
+    if st.button("갱신"):
         initialize_state()
     # 데이터베이스에서 콘텐츠를 가져오고 업데이트
     cursor = conn.cursor()
@@ -66,9 +65,11 @@ if st.session_state.page == "home":
         if input_content:
             cursor.execute("INSERT INTO msg (text, good, dislike) VALUES (?, 0, 0)", (input_content,))
             conn.commit()
+            conn = get_connection()  # 데이터베이스 연결 열기
+            initialize_state()
 
     # 콘텐츠를 표시하고 좋아요/싫어요를 허용
-    st.subheader("콘텐츠 목록:")
+    st.subheader("방명록:")
     for row in text:
         st.write(f"번호: {row[0]}, 내용: {row[1]}")
         st.write(f"like: {row[2]}, dislike: {row[3]}")
@@ -78,11 +79,11 @@ if st.session_state.page == "home":
         if st.button('like', key=like_button_key):
             cursor.execute("UPDATE msg SET good = good + 1 WHERE num = ?", (row[0],))
             conn.commit()
-
+            initialize_state()
         if st.button('dislike', key=dislike_button_key):
             cursor.execute("UPDATE msg SET dislike = dislike + 1 WHERE num = ?", (row[0],))
             conn.commit()
-
+            initialize_state()
 
 # 회원가입 페이지
 if not st.session_state.logged_in:
