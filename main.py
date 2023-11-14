@@ -1,11 +1,9 @@
 import streamlit as st
 import sqlite3
 
-
-# 데이터베이스 연결을 열기 위한 함수
 # 데이터베이스 연결을 열기 위한 함수
 def get_connection():
-    conn = sqlite3.connect('./login.db', check_same_thread=False)
+    conn = sqlite3.connect('./guest.db', check_same_thread=False)
     return conn
 
 
@@ -59,14 +57,14 @@ if st.session_state.page == "home":
         initialize_state()
     # 데이터베이스에서 콘텐츠를 가져오고 업데이트
     cursor = conn.cursor()
-    cursor.execute("SELECT num, content, good, dislike FROM text")
+    cursor.execute("SELECT num, text, good, dislike FROM msg")
     text = cursor.fetchall()
 
     # 데이터베이스에 콘텐츠 삽입
     input_content = st.text_input("원하는 내용을 입력하세요:", key="input_content")
     if st.button("입력"):
         if input_content:
-            cursor.execute("INSERT INTO text (content, good, dislike) VALUES (?, 0, 0)", (input_content,))
+            cursor.execute("INSERT INTO msg (text, good, dislike) VALUES (?, 0, 0)", (input_content,))
             conn.commit()
 
     # 콘텐츠를 표시하고 좋아요/싫어요를 허용
@@ -78,11 +76,11 @@ if st.session_state.page == "home":
         dislike_button_key = f'dislike_button_{row[0]}'
 
         if st.button('like', key=like_button_key):
-            cursor.execute("UPDATE text SET good = good + 1 WHERE num = ?", (row[0],))
+            cursor.execute("UPDATE msg SET good = good + 1 WHERE num = ?", (row[0],))
             conn.commit()
 
         if st.button('dislike', key=dislike_button_key):
-            cursor.execute("UPDATE text SET dislike = dislike + 1 WHERE num = ?", (row[0],))
+            cursor.execute("UPDATE msg SET dislike = dislike + 1 WHERE num = ?", (row[0],))
             conn.commit()
 
 
